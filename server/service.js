@@ -64,7 +64,7 @@ module.exports = (config) => {
 
 	/* eslint-disable */
 	const handlePostCommand = (command) => {
-		var column = null;
+		var column;
 		switch(command) {
 			case 'sessionstart':
 				column = 'session_start';
@@ -84,17 +84,21 @@ module.exports = (config) => {
 			case 'qaend':
 				column = 'Q_A_end';
 				break;
+			default:
+				column = null;
+				break;
 		}
 		if (!column) {
-			return `:hankey: you sent a command I didn\'t recognize: ${command}.`;
+			return Promise.reject(`:hankey: you sent a command I didn\'t recognize: ${command}.`);
+		} else {
+			return updateTalk(column).then(response => {
+				return 'success';
+			}, rejection => {
+				return rejection;
+			}).catch(err => {
+				throw new Error(err);
+			});
 		}
-		return updateTalk(column).then(response => {
-			return response;
-		}, rejection => {
-			return rejection;
-		}).catch(err => {
-			throw new Error(err);
-		});
 	};
 	/* eslint-enable */
 
@@ -126,11 +130,11 @@ module.exports = (config) => {
 		if (process.env.NODE_ENV === 'TEST' && req.command !== 'about') {
 			return res.json({result: 'congratulations'});
 		}
-		handlePostCommand(req.body.command).then(() => {
+
+		handlePostCommand(req.body.command).then(response => {
 			res.sendStatus(201);
 		}, rejection => {
-			log.warn(`the rejection: ${rejection}`);
-			res.json({warning: rejection});
+			res.sendStatus(200);
 		}).catch(err => {
 			log.error(`handlePostCommand error: ${JSON.stringify(err)}`);
 			res.sendStatus(500);
