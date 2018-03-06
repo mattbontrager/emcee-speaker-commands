@@ -131,9 +131,9 @@ module.exports = (config) => {
 			return res.json({result: 'congratulations'});
 		}
 
-		handlePostCommand(req.body.command).then(response => {
+		handlePostCommand(req.body.command).then(() => {
 			res.sendStatus(201);
-		}, rejection => {
+		}, () => {
 			res.sendStatus(200);
 		}).catch(err => {
 			log.error(`handlePostCommand error: ${JSON.stringify(err)}`);
